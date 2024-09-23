@@ -1,4 +1,5 @@
-import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, HostListener, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 @Component({
   selector: 'app-canvas',
@@ -12,22 +13,33 @@ export class CanvasComponent implements AfterViewInit {
   private painting = false;
   private brushColor: string = 'black';
   private brushSize: number = 5;
+  private undoStack: ImageData[] = [];
+  private redoStack: ImageData[] = [];
+
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
 
   changeColor(event: Event) {
     const input = event.target as HTMLInputElement;
     this.brushColor = input.value;
-    this.ctx.strokeStyle = this.brushColor;
+    if (this.ctx) {
+      this.ctx.strokeStyle = this.brushColor;
+    }
   }
 
   changeBrushSize(event: Event) {
     const input = event.target as HTMLInputElement;
     this.brushSize = Number(input.value);
-    this.ctx.lineWidth = this.brushSize;
+    if (this.ctx) {
+      this.ctx.lineWidth = this.brushSize;
+    }
   }
 
   ngAfterViewInit() {
-    this.ctx = this.canvasRef.nativeElement.getContext('2d')!;
-    this.addEventListeners();
+    if (isPlatformBrowser(this.platformId)) {
+      this.ctx = this.canvasRef.nativeElement.getContext('2d')!;
+      this.resizeCanvas();
+      this.addEventListeners();
+    }
   }
 
   private addEventListeners() {
@@ -39,6 +51,7 @@ export class CanvasComponent implements AfterViewInit {
 
   private startPosition(event: MouseEvent) {
     this.painting = true;
+    this.saveState(); // Save state before drawing
     this.draw(event);
   }
 
@@ -50,13 +63,73 @@ export class CanvasComponent implements AfterViewInit {
   private draw(event: MouseEvent) {
     if (!this.painting) return;
 
-    this.ctx.lineWidth = this.brushSize; // Use the dynamic brush size
-    this.ctx.lineCap = 'round';
-    this.ctx.strokeStyle = this.brushColor; // Use the dynamic brush color
+    const rect = this.canvasRef.nativeElement.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
 
-    this.ctx.lineTo(event.offsetX, event.offsetY);
-    this.ctx.stroke();
-    this.ctx.beginPath();
-    this.ctx.moveTo(event.offsetX, event.offsetY);
+    if (this.ctx) {
+      this.ctx.lineWidth = this.brushSize;
+      this.ctx.lineCap = 'round';
+      this.ctx.strokeStyle = this.brushColor;
+
+      this.ctx.lineTo(x, y);
+      this.ctx.stroke();
+      this.ctx.beginPath();
+      this.ctx.moveTo(x, y);
+    }
+  }
+
+  private saveState() {
+    const canvas = this.canvasRef.nativeElement;
+    const imageData = this.ctx.getImageData(0, 0, canvas.width, canvas.height);
+    this.undoStack.push(imageData);
+    this.redoStack = []; // Clear redo stack after a new action
+  }
+
+  undo() {
+    if (this.undoStack.length > 0) {
+      const lastState = this.undoStack.pop();
+      if (lastState && this.ctx) {
+        this.redoStack.push(this.ctx.getImageData(0, 0, this.canvasRef.nativeElement.width, this.canvasRef.nativeElement.height));
+        this.ctx.putImageData(lastState, 0, 0);
+      }
+    }
+  }
+
+  redo() {
+    if (this.redoStack.length > 0) {
+      const lastRedoState = this.redoStack.pop();
+      if (lastRedoState && this.ctx) {
+        this.saveState(); // Save current state to undo stack
+        this.ctx.putImageData(lastRedoState, 0, 0);
+      }
+    }
+  }
+
+  private resizeCanvas() {
+    if (isPlatformBrowser(this.platformId)) {
+      const canvas = this.canvasRef.nativeElement;
+      const newWidth = window.innerWidth;
+      const newHeight = window.innerHeight;
+
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+    }
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.resizeCanvas();
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent) {
+    if (event.ctrlKey && event.key === 'z') { // Ctrl + Z for Undo
+      this.undo();
+      event.preventDefault(); // Prevent default behavior
+    } else if (event.ctrlKey && event.key === 'y') { // Ctrl + Y for Redo
+      this.redo();
+      event.preventDefault(); // Prevent default behavior
+    }
   }
 }

@@ -1,4 +1,12 @@
 canvas {
-    cursor: crosshair;
-  }
-  
+}
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+.full-screen-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
