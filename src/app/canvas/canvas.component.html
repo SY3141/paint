@@ -1,6 +1,7 @@
 <div>
     <input type="color" (input)="changeColor($event)" />
     <input type="range" min="1" max="50" (input)="changeBrushSize($event)" />
-  </div>
-  <canvas #canvasElement class="full-screen-canvas"></canvas>
-  
+    <button (click)="undo()">Undo</button>
+    <button (click)="redo()">Redo</button>
+</div>
+<canvas #canvasElement class="full-screen-canvas"></canvas>
