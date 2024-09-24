@@ -47,9 +47,17 @@ export class CanvasComponent implements AfterViewInit {
     canvas.addEventListener('mousedown', this.startPosition.bind(this));
     canvas.addEventListener('mouseup', this.endPosition.bind(this));
     canvas.addEventListener('mousemove', this.draw.bind(this));
+
+    // Add touch event listeners
+    canvas.addEventListener('touchstart', this.startPosition.bind(this));
+    canvas.addEventListener('touchend', this.endPosition.bind(this));
+    canvas.addEventListener('touchmove', this.draw.bind(this));
+
+    // Prevent default touch actions
+    canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
   }
 
-  private startPosition(event: MouseEvent) {
+  private startPosition(event: MouseEvent | TouchEvent) {
     this.painting = true;
     this.saveState(); // Save state before drawing
     this.draw(event);
@@ -60,12 +68,21 @@ export class CanvasComponent implements AfterViewInit {
     this.ctx.beginPath(); // Reset path
   }
 
-  private draw(event: MouseEvent) {
+  private draw(event: MouseEvent | TouchEvent) {
     if (!this.painting) return;
 
     const rect = this.canvasRef.nativeElement.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    let x: number = 0;
+    let y: number = 0;
+
+    if (event instanceof MouseEvent) {
+      x = event.clientX - rect.left;
+      y = event.clientY - rect.top;
+    } else if (event.touches && event.touches.length > 0) {
+      const touch = event.touches[0];
+      x = touch.clientX - rect.left;
+      y = touch.clientY - rect.top;
+    }
 
     if (this.ctx) {
       this.ctx.lineWidth = this.brushSize;
@@ -110,7 +127,7 @@ export class CanvasComponent implements AfterViewInit {
     if (isPlatformBrowser(this.platformId)) {
       const canvas = this.canvasRef.nativeElement;
       const newWidth = window.innerWidth * 0.985;
-      const newHeight = window.innerHeight *0.94;
+      const newHeight = window.innerHeight * 0.94;
 
       canvas.width = newWidth;
       canvas.height = newHeight;
