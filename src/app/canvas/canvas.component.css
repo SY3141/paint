@@ -3,12 +3,25 @@ html, body {
   height: 100%;
 }
 div{
-  overflow: hidden;
+  display: flex;
 }
+
 button{
   margin-bottom: 10px;
   margin-right: 10px;
+  border-radius: 15px;
 }
+
+.title{
+  margin: 0; 
+  margin-top: 5px; 
+  margin-right: 10px; 
+  font-size: 20px;
+  color: rgb(174, 0, 180);
+  font-weight: 900;
+
+}
+
 .full-screen-canvas {
   justify-content: center;
   border: 1px solid black;

@@ -127,7 +127,7 @@ export class CanvasComponent implements AfterViewInit {
     if (isPlatformBrowser(this.platformId)) {
       const canvas = this.canvasRef.nativeElement;
       const newWidth = window.innerWidth * 0.985;
-      const newHeight = window.innerHeight * 0.94;
+      const newHeight = window.innerHeight * 0.93;
   
       // Create a temporary canvas to save the current content
       const tempCanvas = document.createElement('canvas');
