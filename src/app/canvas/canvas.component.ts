@@ -33,6 +33,9 @@ export class CanvasComponent implements AfterViewInit {
       this.ctx.lineWidth = this.brushSize;
     }
   }
+  getBrushSize(): number {
+    return this.brushSize;
+  }
 
   ngAfterViewInit() {
     if (isPlatformBrowser(this.platformId)) {
