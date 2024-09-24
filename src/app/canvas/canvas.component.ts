@@ -33,6 +33,7 @@ export class CanvasComponent implements AfterViewInit {
       this.ctx.lineWidth = this.brushSize;
     }
   }
+
   getBrushSize(): number {
     return this.brushSize;
   }
@@ -73,7 +74,7 @@ export class CanvasComponent implements AfterViewInit {
 
   private draw(event: MouseEvent | TouchEvent) {
     if (!this.painting) return;
-
+    this.redoStack = [];
     const rect = this.canvasRef.nativeElement.getBoundingClientRect();
     let x: number = 0;
     let y: number = 0;
@@ -103,13 +104,13 @@ export class CanvasComponent implements AfterViewInit {
     const canvas = this.canvasRef.nativeElement;
     const imageData = this.ctx.getImageData(0, 0, canvas.width, canvas.height);
     this.undoStack.push(imageData);
-    this.redoStack = []; // Clear redo stack after a new action
   }
 
   undo() {
     if (this.undoStack.length > 0) {
       const lastState = this.undoStack.pop();
       if (lastState && this.ctx) {
+        // Save the current state to redo stack before undoing
         this.redoStack.push(this.ctx.getImageData(0, 0, this.canvasRef.nativeElement.width, this.canvasRef.nativeElement.height));
         this.ctx.putImageData(lastState, 0, 0);
       }
@@ -131,20 +132,20 @@ export class CanvasComponent implements AfterViewInit {
       const canvas = this.canvasRef.nativeElement;
       const newWidth = window.innerWidth * 0.985;
       const newHeight = window.innerHeight * 0.93;
-  
+
       // Create a temporary canvas to save the current content
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = canvas.width;
       tempCanvas.height = canvas.height;
       const tempCtx = tempCanvas.getContext('2d');
-      
+
       if (tempCtx) {
         tempCtx.drawImage(canvas, 0, 0);
       }
-  
+
       canvas.width = newWidth;
       canvas.height = newHeight;
-  
+
       // Redraw the saved content onto the resized canvas
       if (this.ctx) {
         this.ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, canvas.width, canvas.height);
