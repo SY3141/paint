@@ -128,9 +128,24 @@ export class CanvasComponent implements AfterViewInit {
       const canvas = this.canvasRef.nativeElement;
       const newWidth = window.innerWidth * 0.985;
       const newHeight = window.innerHeight * 0.94;
-
+  
+      // Create a temporary canvas to save the current content
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      
+      if (tempCtx) {
+        tempCtx.drawImage(canvas, 0, 0);
+      }
+  
       canvas.width = newWidth;
       canvas.height = newHeight;
+  
+      // Redraw the saved content onto the resized canvas
+      if (this.ctx) {
+        this.ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, canvas.width, canvas.height);
+      }
     }
   }
 
