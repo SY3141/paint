@@ -109,8 +109,8 @@ export class CanvasComponent implements AfterViewInit {
   private resizeCanvas() {
     if (isPlatformBrowser(this.platformId)) {
       const canvas = this.canvasRef.nativeElement;
-      const newWidth = window.innerWidth;
-      const newHeight = window.innerHeight;
+      const newWidth = window.innerWidth * 0.985;
+      const newHeight = window.innerHeight *0.94;
 
       canvas.width = newWidth;
       canvas.height = newHeight;
